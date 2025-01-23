@@ -5,3 +5,6 @@ dependencies:
   - pybind11
   - pytest
   - ninja
+  - cmake
+  - catch2
+  - meson
