@@ -7,15 +7,6 @@
 namespace Fixi
 {
 
-struct FixedBondLengthPair
-{
-    int i{};
-    int j{};
-    double dij{};
-    double mass_i{ 1.0 };
-    double mass_j{ 1.0 };
-};
-
 class Rattle
 {
     int maxiter{};
@@ -59,8 +50,8 @@ public:
             {
                 const double g = ( s2 - dij2 ) / ( 2.0 * ( s.dot( rij ) ) * ( 1.0 / mi + 1.0 / mj ) );
 
-                adjusted_positions[i] += g * rij / mi;
-                adjusted_positions[j] -= g * rij / mi;
+                adjusted_positions[i] += -g * rij / mi;
+                adjusted_positions[j] -= -g * rij / mi;
 
                 // Update s and s2
                 s   = mic( adjusted_positions[i] - adjusted_positions[j], cell_lengths, pbc );
@@ -71,7 +62,7 @@ public:
         }
     }
 
-    void adjust_momenta(
+    void adjust_velocities(
         const std::span<Vector3> positions, std::span<Vector3> adjusted_velocities, const Vector3 & cell_lengths )
     {
         const int n_pairs = pairs.size();
@@ -96,7 +87,7 @@ public:
                 const double k = rij.dot( vij ) / ( dij2 * ( 1.0 / mi + 1.0 / mj ) );
 
                 adjusted_velocities[i] -= k * rij / mi;
-                adjusted_velocities[i] += k * rij / mj;
+                adjusted_velocities[j] += k * rij / mj;
 
                 // Update
                 vij = adjusted_velocities[i] - adjusted_velocities[j];

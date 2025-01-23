@@ -8,10 +8,9 @@ fixi_dep = declare_dependency(include_directories : inc)
 
 executable('fixi_cli', 'src/main.cpp', include_directories : inc)
 
-# tests = [
-#   ['Test_System', 'test/test_system.cpp'],
-# ]
-tests = []
+tests = [
+    ['Test_Water', 'tests/test_water.cpp']
+]
 
 test_inc = []
 test_inc += inc
@@ -20,7 +19,7 @@ Catch2 = dependency('Catch2', method : 'cmake', modules : ['Catch2::Catch2WithMa
 
 foreach t : tests
   exe = executable(t.get(0), t.get(1),
-    dependencies : [Catch2, fmt_dep, graphlib_dep],
+    dependencies : [Catch2],
     include_directories : test_inc
   )
   test(t.get(0), exe, workdir : meson.project_source_root())
