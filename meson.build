@@ -9,6 +9,7 @@ fixi_dep = declare_dependency(include_directories : inc)
 executable('fixi_cli', 'src/main.cpp', include_directories : inc)
 
 tests = [
+    ['Test_Dimer', 'tests/test_dimer.cpp'],
     ['Test_Water', 'tests/test_water.cpp']
 ]
 
