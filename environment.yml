@@ -1,0 +1,7 @@
+name: fixienv
+channels:
+  - conda-forge
+dependencies:
+  - pybind11
+  - pytest
+  - ninja
