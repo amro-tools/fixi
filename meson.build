@@ -10,7 +10,8 @@ executable('fixi_cli', 'src/main.cpp', include_directories : inc)
 
 tests = [
     ['Test_Dimer', 'tests/test_dimer.cpp'],
-    ['Test_Water', 'tests/test_water.cpp']
+    ['Test_Water', 'tests/test_water.cpp'],
+    ['Test_Buckets', 'tests/test_buckets.cpp'],
 ]
 
 test_inc = []

@@ -1,9 +1,7 @@
 #pragma once
-#include "fixi/defines.hpp"
+#include <fixi/defines.hpp>
 #include <fixi/utils.hpp>
-#include <iostream>
 #include <set>
-#include <span>
 
 namespace Fixi
 {
