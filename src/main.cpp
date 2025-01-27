@@ -30,7 +30,7 @@ int main()
     double mH = 1.0;
 
     const int maxiter      = 500;
-    const double tolerance = 1e-6;
+    const double tolerance = 1e-10;
     const std::array<bool, 3> pbc{ false, false, false };
     const Fixi::Vector3 cell_lengths = { 20.0, 20.0, 20.0 };
 
@@ -46,8 +46,8 @@ int main()
         const int idx_H2 = idx_O + 2;
 
         positions[idx_O]  = 2.0 * Fixi::Vector3::Random();
-        positions[idx_H1] = positions[idx_O] + 0.4 * Fixi::Vector3::Random();
-        positions[idx_H2] = positions[idx_O] + 0.4 * Fixi::Vector3::Random();
+        positions[idx_H1] = positions[idx_O] + r_OH * 1.4 * Fixi::Vector3::Random().normalized();
+        positions[idx_H2] = positions[idx_O] + r_OH * 1.15 * Fixi::Vector3::Random().normalized();
     }
 
     // Define velocities
@@ -71,7 +71,7 @@ int main()
 
         pairs.push_back( { idx_O, idx_H1, r_OH, mO, mH } );
         pairs.push_back( { idx_O, idx_H2, r_OH, mO, mH } );
-        pairs.push_back( { idx_H1, idx_H2, r_HH, mH, mH } );
+        // pairs.push_back( { idx_H1, idx_H2, r_HH, mH, mH } );
     }
 
     std::cout << std::format( "{} threads\n", get_n_threads() );

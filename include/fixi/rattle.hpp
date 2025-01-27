@@ -1,9 +1,8 @@
 #pragma once
-#include <omp.h>
+#include <fixi/backend.hpp>
 #include <fixi/buckets.hpp>
 #include <fixi/defines.hpp>
 #include <fixi/utils.hpp>
-#include <iostream>
 #include <span>
 namespace Fixi
 {
@@ -38,48 +37,41 @@ public:
             // In order not to create any race conditions we iterate over the buckets serially
             for( const auto & bucket : buckets )
             {
-#pragma omp parallel
-                {
-                    // Each thread has its own private hij_max
-                    double hij_max_thread{ 0.0 };
+                auto cb = [&]( int idx_pair ) {
+                    const auto & pair = bucket[idx_pair];
 
-                    // Distribute the loop iterations among threads
-#pragma omp for nowait
-                    for( int idx_pair = 0; idx_pair < bucket.size(); idx_pair++ )
-                    {
-                        const auto & pair = bucket[idx_pair];
+                    const int i      = pair.i;
+                    const int j      = pair.j;
+                    const double mi  = pair.mass_i;
+                    const double mj  = pair.mass_j;
+                    const double dij = pair.dij; // desired constrained bond length
 
-                        const int i      = pair.i;
-                        const int j      = pair.j;
-                        const double mi  = pair.mass_i;
-                        const double mj  = pair.mass_j;
-                        const double dij = pair.dij; // desired constrained bond length
+                    // `s` is the current approximation for the vector displacement between atoms i and j
+                    const Vector3 rij = mic( unadjusted_positions[i] - unadjusted_positions[j], cell_lengths, pbc );
+                    const Vector3 s   = mic( adjusted_positions[i] - adjusted_positions[j], cell_lengths, pbc );
+                    const double s2   = s.squaredNorm();
+                    const double dij2 = dij * dij;
 
-                        // `s` is the current approximation for the vector displacement between atoms i and j
-                        const Vector3 rij = mic( unadjusted_positions[i] - unadjusted_positions[j], cell_lengths, pbc );
-                        const Vector3 s   = mic( adjusted_positions[i] - adjusted_positions[j], cell_lengths, pbc );
-                        const double s2   = s.squaredNorm();
-                        const double dij2 = dij * dij;
+                    const double hij = abs( s2 - dij2 ); // holonomic constraint
 
-                        const double hij = abs( s2 - dij2 ); // holonomic constraint
+                    // if the constraint is violated adjust adjusted_positions
+                    // this is achieved by iteratively solving
+                    //   |adjusted_positions[i] - adjusted_positions[j]|^2 = dij^2
+                    // Neglect g^2 term in derivation (also h cancels so we don't need the step size)
+                    const double g = ( s2 - dij2 ) / ( 2.0 * ( s.dot( rij ) ) * ( 1.0 / mi + 1.0 / mj ) );
 
-                        // if the constraint is violated adjust adjusted_positions
-                        // this is achieved by iteratively solving
-                        //   |adjusted_positions[i] - adjusted_positions[j]|^2 = dij^2
-                        // Neglect g^2 term in derivation (also h cancels so we don't need the step size)
-                        const double g = ( s2 - dij2 ) / ( 2.0 * ( s.dot( rij ) ) * ( 1.0 / mi + 1.0 / mj ) );
+                    adjusted_positions[i] += -g * rij / mi;
+                    adjusted_positions[j] -= -g * rij / mi;
 
-                        adjusted_positions[i] += -g * rij / mi;
-                        adjusted_positions[j] -= -g * rij / mi;
+                    return hij;
+                };
 
-                        hij_max_thread = std::max( hij, hij_max_thread );
-                    }
-                    // Combine the private hij_max_thread into hij_max
-#pragma omp critical
-                    {
-                        hij_max = std::max( hij_max_thread, hij_max );
-                    }
-                }
+                auto red = [&]( auto & hij_max_bucket, const auto & hij_max_thread ) {
+                    hij_max_bucket = std::max( hij_max_bucket, hij_max_thread );
+                };
+
+                const double hij_max_bucket = Backend::transform_reduce<double>( bucket.size(), cb, red );
+                hij_max                     = std::max( hij_max_bucket, hij_max );
             }
             iteration++;
         } while( ( hij_max > tolerance ) && ( iteration < maxiter ) );
@@ -88,6 +80,7 @@ public:
     void adjust_velocities(
         const std::span<Vector3> positions, std::span<Vector3> adjusted_velocities, const Vector3 & cell_lengths )
     {
+
         iteration = 0;
         double hij_max{ 0.0 };
         do
@@ -97,9 +90,7 @@ public:
             // In order not to create any race conditions we iterate over the buckets serially
             for( const auto & bucket : buckets )
             {
-#pragma omp parallel for
-                for( int idx_pair = 0; idx_pair < bucket.size(); idx_pair++ )
-                {
+                auto cb = [&]( int idx_pair ) {
                     const auto & pair = bucket[idx_pair];
 
                     const int i       = pair.i;
@@ -117,9 +108,15 @@ public:
 
                     adjusted_velocities[i] -= k * rij / mi;
                     adjusted_velocities[j] += k * rij / mj;
+                    return hij;
+                };
 
-                    hij_max = std::max( hij, hij_max );
-                }
+                auto red = [&]( auto & hij_max_bucket, const auto & hij_max_thread ) {
+                    hij_max_bucket = std::max( hij_max_bucket, hij_max_thread );
+                };
+
+                const double hij_max_bucket = Backend::transform_reduce<double>( bucket.size(), cb, red );
+                hij_max                     = std::max( hij_max_bucket, hij_max );
             }
             iteration++;
         } while( ( hij_max > tolerance ) && ( iteration < maxiter ) );

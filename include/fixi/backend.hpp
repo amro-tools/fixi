@@ -1,6 +1,28 @@
+#pragma once
 #include <cstddef>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace Fixi::Backend
 {
+
+inline void set_num_threads( int n_threads )
+{
+#ifdef _OPENMP
+    omp_set_num_threads( n_threads );
+#endif
+}
+
+inline int get_num_threads()
+{
+#ifdef _OPENMP
+    return omp_get_max_threads();
+#endif
+    return 1;
+}
+
 // We define the reduction ourselves here (instead of declaring a custom omp reduction), because
 // we don't want to have to declare a new reduction for each template instantiation and this
 // approach works seamlessly with templates
