@@ -15,6 +15,8 @@ class Rattle
     std::array<bool, 3> pbc{};
 
 public:
+    int iteration{ 0 };
+
     Rattle(
         int maxiter, double tolerance, const std::vector<FixedBondLengthPair> & pairs, const std::array<bool, 3> & pbc )
             : maxiter( maxiter ), tolerance( tolerance ), pairs( pairs ), pbc( pbc ){};
@@ -25,10 +27,11 @@ public:
     {
         const int n_pairs = pairs.size();
 
-        int iteration{ 0 };
-        double hij_max = 0.0;
+        iteration = 0;
+        double hij_max{ 0.0 };
         do
         {
+            hij_max = 0.0;
             for( int idx_pair = 0; idx_pair < n_pairs; idx_pair++ )
             {
                 const int i      = pairs[idx_pair].i;
@@ -57,8 +60,7 @@ public:
                 hij_max = std::max( hij, hij_max );
             }
             iteration++;
-
-        } while( hij_max > tolerance && iteration < maxiter );
+        } while( ( hij_max > tolerance ) && ( iteration < maxiter ) );
     }
 
     void adjust_velocities(
@@ -66,10 +68,11 @@ public:
     {
         const int n_pairs = pairs.size();
 
-        int iteration{ 0 };
-        double hij_max = 0.0;
+        iteration = 0;
+        double hij_max{ 0.0 };
         do
         {
+            hij_max = 0.0;
             for( int idx_pair = 0; idx_pair < n_pairs; idx_pair++ )
             {
                 const int i       = pairs[idx_pair].i;
@@ -92,7 +95,7 @@ public:
             }
             iteration++;
 
-        } while( hij_max > tolerance && iteration < maxiter );
+        } while( ( hij_max > tolerance ) && ( iteration < maxiter ) );
     }
 };
 
