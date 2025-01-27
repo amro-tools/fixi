@@ -42,6 +42,7 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
     INFO( std::format( "hij_before {}\n", hij_before ) );
 
     rattle.adjust_positions( positions, adjusted_positions, cell_lengths );
+    INFO( std::format( "iterations {}\n", rattle.iteration) );
 
     auto [hij, hij_v] = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
     INFO( std::format( "hij_after {}\n", hij ) );
@@ -53,6 +54,8 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
     INFO( std::format( "hij_v_before {}\n", hij_v2_before ) );
 
     rattle.adjust_velocities( adjusted_positions, velocities, cell_lengths );
+    INFO( std::format( "iterations {}\n", rattle.iteration) );
+
     auto [hij2_after, hij_v2_after]
         = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
     INFO( std::format( "hij_v_after {}\n", hij_v2_after ) );
