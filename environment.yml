@@ -7,4 +7,7 @@ dependencies:
   - ninja
   - cmake
   - catch2
-  - meson
+  - meson>=1.2.3
+  - meson-python
+pip:
+  - numpy

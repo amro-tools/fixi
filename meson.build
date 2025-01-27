@@ -52,3 +52,35 @@ foreach t : tests
   )
   test(t.get(0), exe, workdir : meson.project_source_root())
 endforeach
+
+# Python module
+
+py = import('python').find_installation('python', modules: ['numpy'])
+
+python_deps = [
+  py.dependency(),
+  dependency('pybind11'),
+  fixi_dep
+]
+
+# for the bindings
+py.extension_module(
+  'fixicpp',
+  sources : [
+    'python_bindings/bindings.cpp'
+  ],
+  # include_directories: ,
+  dependencies: python_deps,
+  # cpp_args : args,
+  install: true,
+  subdir: 'pyfixi/'
+)
+
+# pyflowy main package
+py.install_sources([
+    'pyfixi/__init__.py',
+  ],
+  pure: false, # install next to compiled extension
+  subdir: 'pyflowy'
+)
+
