@@ -3,7 +3,9 @@
 
 namespace Fixi
 {
-using Vector3 = Eigen::Matrix<double, 3, 1>;
+
+using Vector3     = Eigen::Matrix<double, 3, 1>;
+using Vectorfield = Eigen::Matrix<double, Eigen::Dynamic, 3>;
 
 struct FixedBondLengthPair
 {
