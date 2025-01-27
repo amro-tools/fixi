@@ -34,6 +34,7 @@ TEST_CASE( "Test pairs are correctly sorted into buckets", "[PairsInBuckets]" )
         = { { 1, 2 }, { 1, 3 }, { 1, 4 },   { 4, 5 },   { 4, 6 },      { 7, 8 },
             { 7, 9 }, { 8, 9 }, { 10, 11 }, { 10, 12 }, { 10, 11, 12 } };
 
+    const int n_pairs  = pairs.size();
     const auto buckets = bucket_sorter( pairs );
 
     int n_buckets = buckets.size();
@@ -54,8 +55,12 @@ TEST_CASE( "Test pairs are correctly sorted into buckets", "[PairsInBuckets]" )
 
     REQUIRE( n_buckets == 3 );
 
+    int n_pairs_buckets = 0;
     for( const auto & bucket : buckets )
     {
+        n_pairs_buckets += bucket.size();
         REQUIRE( check_bucket( bucket ) );
     }
+
+    REQUIRE( n_pairs == n_pairs_buckets );
 }
