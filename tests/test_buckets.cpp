@@ -1,4 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <fixi/buckets.hpp>
 #include <fixi/defines.hpp>
 #include <format>
@@ -6,10 +7,10 @@
 
 bool check_bucket( const std::vector<Fixi::FixedBondLengthPair> & bucket )
 {
-    for( int idx1 = 0; idx1 < bucket.size(); idx1++ )
+    for( size_t idx1 = 0; idx1 < bucket.size(); idx1++ )
     {
         const auto & p1 = bucket[idx1];
-        for( int idx2 = 0; idx2 < bucket.size(); idx2++ )
+        for( size_t idx2 = 0; idx2 < bucket.size(); idx2++ )
         {
             // skip if pair is checking against itself
             if( idx1 == idx2 )
@@ -26,6 +27,7 @@ bool check_bucket( const std::vector<Fixi::FixedBondLengthPair> & bucket )
             return true;
         }
     }
+    return false;
 }
 
 TEST_CASE( "Test pairs are correctly sorted into buckets", "[PairsInBuckets]" )
@@ -37,16 +39,16 @@ TEST_CASE( "Test pairs are correctly sorted into buckets", "[PairsInBuckets]" )
     const int n_pairs  = pairs.size();
     const auto buckets = bucket_sorter( pairs );
 
-    int n_buckets = buckets.size();
+    const size_t n_buckets = buckets.size();
 
     INFO( std ::format( "There are {} buckets\n", n_buckets ) );
 
-    for( int ibucket = 0; ibucket < n_buckets; ibucket++ )
+    for( size_t ibucket = 0; ibucket < n_buckets; ibucket++ )
     {
         std::cout << std::format( "ibucket = {}\n", ibucket ) << "\n";
         const auto & bucket = buckets[ibucket];
 
-        for( int ipair = 0; ipair < bucket.size(); ipair++ )
+        for( size_t ipair = 0; ipair < bucket.size(); ipair++ )
         {
             const auto pair = bucket[ipair];
             std::cout << std::format( "    i = {}, j = {}\n", pair.i, pair.j ) << "\n";
