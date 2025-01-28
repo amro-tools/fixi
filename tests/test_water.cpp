@@ -5,12 +5,11 @@
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <fixi/defines.hpp>
 #include <fixi/rattle.hpp>
-#include <iostream>
 
 TEST_CASE( "Test that the positions and velocities can be constrained using RATTLE", "[TestWater]" )
 {
-    int n_atoms     = { 3 };
-    int n_molecules = { 1 };
+    int n_atoms     = { 27 };
+    int n_molecules = { 9 };
 
     double r_OH = 1;
     double r_HH = 1.5;
@@ -18,7 +17,7 @@ TEST_CASE( "Test that the positions and velocities can be constrained using RATT
     double mO = 16.0;
     double mH = 1.0;
 
-    const int maxiter      = 500;
+    const int maxiter      = 5000;
     const double tolerance = 1e-6;
     const std::array<bool, 3> pbc{ false, false, false };
     const Fixi::Vector3 cell_lengths = { 20.0, 20.0, 20.0 };
@@ -34,9 +33,9 @@ TEST_CASE( "Test that the positions and velocities can be constrained using RATT
         const int idx_H1 = idx_O + 1;
         const int idx_H2 = idx_O + 2;
 
-        positions.row(idx_O)  = 2.0 * Fixi::Vector3::Random();
-        positions.row(idx_H1) = positions.row(idx_O) + 0.4 * Fixi::Vector3::Random();
-        positions.row(idx_H2) = positions.row(idx_O) + 0.4 * Fixi::Vector3::Random();
+        positions.row( idx_O )  = 2.0 * Fixi::Vector3::Random();
+        positions.row( idx_H1 ) = positions.row( idx_O ) + 0.4 * Fixi::Vector3::Random();
+        positions.row( idx_H2 ) = positions.row( idx_O ) + 0.4 * Fixi::Vector3::Random();
     }
 
     // Define velocities
@@ -46,9 +45,9 @@ TEST_CASE( "Test that the positions and velocities can be constrained using RATT
         const int idx_H1 = idx_O + 1;
         const int idx_H2 = idx_O + 2;
 
-        velocities.row(idx_O)  = 0.1 * Fixi::Vector3::Random();
-        velocities.row(idx_H1) = 0.1 * Fixi::Vector3::Random();
-        velocities.row(idx_H2) = 0.1 * Fixi::Vector3::Random();
+        velocities.row( idx_O )  = 0.1 * Fixi::Vector3::Random();
+        velocities.row( idx_H1 ) = 0.1 * Fixi::Vector3::Random();
+        velocities.row( idx_H2 ) = 0.1 * Fixi::Vector3::Random();
     }
 
     // Define pairs
