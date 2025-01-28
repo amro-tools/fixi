@@ -1,9 +1,9 @@
 #pragma once
+#include <Eigen/Core>
 #include <fixi/backend.hpp>
 #include <fixi/buckets.hpp>
 #include <fixi/defines.hpp>
 #include <fixi/utils.hpp>
-#include <span>
 namespace Fixi
 {
 
@@ -25,7 +25,7 @@ public:
     }
 
     void adjust_positions(
-        const std::span<Vector3> unadjusted_positions, std::span<Vector3> adjusted_positions,
+        const Eigen::Ref<Vectorfield> unadjusted_positions, Eigen::Ref<Vectorfield> adjusted_positions,
         const Vector3 & cell_lengths )
     {
         iteration = 0;
@@ -47,8 +47,10 @@ public:
                     const double dij = pair.dij; // desired constrained bond length
 
                     // `s` is the current approximation for the vector displacement between atoms i and j
-                    const Vector3 rij = mic( unadjusted_positions[i] - unadjusted_positions[j], cell_lengths, pbc );
-                    const Vector3 s   = mic( adjusted_positions[i] - adjusted_positions[j], cell_lengths, pbc );
+                    const Vector3 rij
+                        = mic( unadjusted_positions.row( i ) - unadjusted_positions.row( j ), cell_lengths, pbc );
+                    const Vector3 s
+                        = mic( adjusted_positions.row( i ) - adjusted_positions.row( j ), cell_lengths, pbc );
                     const double s2   = s.squaredNorm();
                     const double dij2 = dij * dij;
 
@@ -60,8 +62,8 @@ public:
                     // Neglect g^2 term in derivation (also h cancels so we don't need the step size)
                     const double g = ( s2 - dij2 ) / ( 2.0 * ( s.dot( rij ) ) * ( 1.0 / mi + 1.0 / mj ) );
 
-                    adjusted_positions[i] += -g * rij / mi;
-                    adjusted_positions[j] -= -g * rij / mi;
+                    adjusted_positions.row( i ) += -g * rij / mi;
+                    adjusted_positions.row( j ) -= -g * rij / mi;
 
                     return hij;
                 };
@@ -78,7 +80,8 @@ public:
     }
 
     void adjust_velocities(
-        const std::span<Vector3> positions, std::span<Vector3> adjusted_velocities, const Vector3 & cell_lengths )
+        const Eigen::Ref<Vectorfield> positions, Eigen::Ref<Vectorfield> adjusted_velocities,
+        const Vector3 & cell_lengths )
     {
 
         iteration = 0;
@@ -100,14 +103,14 @@ public:
                     const double dij  = pair.dij; // desired constrained bond length
                     const double dij2 = dij * dij;
 
-                    const Vector3 rij = mic( positions[i] - positions[j], cell_lengths, pbc );
-                    const Vector3 vij = adjusted_velocities[i] - adjusted_velocities[j];
+                    const Vector3 rij = mic( positions.row( i ) - positions.row( j ), cell_lengths, pbc );
+                    const Vector3 vij = adjusted_velocities.row( i ) - adjusted_velocities.row( j );
 
                     const double hij = abs( rij.dot( vij ) );
                     const double k   = rij.dot( vij ) / ( dij2 * ( 1.0 / mi + 1.0 / mj ) );
 
-                    adjusted_velocities[i] -= k * rij / mi;
-                    adjusted_velocities[j] += k * rij / mj;
+                    adjusted_velocities.row( i ) -= k * rij / mi;
+                    adjusted_velocities.row( j ) += k * rij / mj;
                     return hij;
                 };
 

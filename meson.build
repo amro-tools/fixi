@@ -57,10 +57,9 @@ endforeach
 
 py = import('python').find_installation('python', modules: ['numpy'])
 
-python_deps = [
+python_deps = deps + [
   py.dependency(),
   dependency('pybind11'),
-  fixi_dep
 ]
 
 # for the bindings
@@ -71,7 +70,7 @@ py.extension_module(
   ],
   # include_directories: ,
   dependencies: python_deps,
-  # cpp_args : args,
+  cpp_args : cpp_args,
   install: true,
   subdir: 'pyfixi/'
 )
@@ -81,6 +80,6 @@ py.install_sources([
     'pyfixi/__init__.py',
   ],
   pure: false, # install next to compiled extension
-  subdir: 'pyflowy'
+  subdir: 'pyfixi'
 )
 

@@ -20,15 +20,15 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
     const std::array<bool, 3> pbc{ true, true, false };
     const Fixi::Vector3 cell_lengths = { 20.0, 20.0, 20.0 };
 
-    std::vector<Fixi::Vector3> positions( n_atoms );
-    std::vector<Fixi::Vector3> velocities( n_atoms );
+    Fixi::Vectorfield positions( n_atoms, 3 );
+    Fixi::Vectorfield velocities( n_atoms, 3 );
     std::vector<Fixi::FixedBondLengthPair> pairs{};
 
-    positions[0] = Fixi::Vector3::Zero();
-    positions[1] = positions[0] + 2.0 * rij * Fixi::Vector3::Random().normalized();
+    positions.row( 0 ) = Fixi::Vector3::Zero();
+    positions.row( 1 ) = positions.row( 0 ) + 2.0 * rij * Fixi::Vector3::Random().normalized();
 
-    velocities[0] = Fixi::Vector3::Random();
-    velocities[1] = Fixi::Vector3::Random();
+    velocities.row( 0 ) = Fixi::Vector3::Random();
+    velocities.row( 1 ) = Fixi::Vector3::Random();
 
     pairs.push_back( { 0, 1, rij, m, m } );
 
@@ -42,7 +42,7 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
     INFO( std::format( "hij_before {}\n", hij_before ) );
 
     rattle.adjust_positions( positions, adjusted_positions, cell_lengths );
-    INFO( std::format( "iterations {}\n", rattle.iteration) );
+    INFO( std::format( "iterations {}\n", rattle.iteration ) );
 
     auto [hij, hij_v] = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
     INFO( std::format( "hij_after {}\n", hij ) );
@@ -54,7 +54,7 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
     INFO( std::format( "hij_v_before {}\n", hij_v2_before ) );
 
     rattle.adjust_velocities( adjusted_positions, velocities, cell_lengths );
-    INFO( std::format( "iterations {}\n", rattle.iteration) );
+    INFO( std::format( "iterations {}\n", rattle.iteration ) );
 
     auto [hij2_after, hij_v2_after]
         = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );

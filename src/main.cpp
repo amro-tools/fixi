@@ -34,8 +34,8 @@ int main()
     const std::array<bool, 3> pbc{ false, false, false };
     const Fixi::Vector3 cell_lengths = { 20.0, 20.0, 20.0 };
 
-    std::vector<Fixi::Vector3> positions( n_atoms );
-    std::vector<Fixi::Vector3> velocities( n_atoms );
+    Fixi::Vectorfield positions( n_atoms, 3 );
+    Fixi::Vectorfield velocities( n_atoms, 3 );
     std::vector<Fixi::FixedBondLengthPair> pairs{};
 
     // Define positions
@@ -45,9 +45,9 @@ int main()
         const int idx_H1 = idx_O + 1;
         const int idx_H2 = idx_O + 2;
 
-        positions[idx_O]  = 2.0 * Fixi::Vector3::Random();
-        positions[idx_H1] = positions[idx_O] + r_OH * 1.4 * Fixi::Vector3::Random().normalized();
-        positions[idx_H2] = positions[idx_O] + r_OH * 1.15 * Fixi::Vector3::Random().normalized();
+        positions.row(idx_O)  = 2.0 * Fixi::Vector3::Random();
+        positions.row(idx_H1) = positions.row(idx_O) + r_OH * 1.4 * Fixi::Vector3::Random().normalized();
+        positions.row(idx_H2) = positions.row(idx_O) + r_OH * 1.15 * Fixi::Vector3::Random().normalized();
     }
 
     // Define velocities
@@ -57,9 +57,9 @@ int main()
         const int idx_H1 = idx_O + 1;
         const int idx_H2 = idx_O + 2;
 
-        velocities[idx_O]  = 0.1 * Fixi::Vector3::Random();
-        velocities[idx_H1] = 0.1 * Fixi::Vector3::Random();
-        velocities[idx_H2] = 0.1 * Fixi::Vector3::Random();
+        velocities.row(idx_O)  = 0.1 * Fixi::Vector3::Random();
+        velocities.row(idx_H1) = 0.1 * Fixi::Vector3::Random();
+        velocities.row(idx_H2) = 0.1 * Fixi::Vector3::Random();
     }
 
     // Define pairs
@@ -78,7 +78,7 @@ int main()
 
     auto rattle = Fixi::Rattle( maxiter, tolerance, pairs, pbc );
 
-    auto adjusted_positions = positions;
+    Fixi::Vectorfield adjusted_positions = positions;
 
     auto [hij_before, hij_v_before]
         = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );

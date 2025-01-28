@@ -21,8 +21,8 @@ inline Vector3 mic( const Vector3 & dr, const Vector3 & cell_lengths, const std:
 }
 
 inline std::array<double, 2> check_constraints(
-    const std::span<FixedBondLengthPair> pairs, const std::span<Vector3> positions, const std::span<Vector3> velocities,
-    const Vector3 & cell_lengths, const std::array<bool, 3> & pbc )
+    const std::span<FixedBondLengthPair> pairs, const Eigen::Ref<Vectorfield> positions,
+    const Eigen::Ref<Vectorfield> velocities, const Vector3 & cell_lengths, const std::array<bool, 3> & pbc )
 {
     double max_hij   = {};
     double max_hij_v = {};
@@ -34,14 +34,14 @@ inline std::array<double, 2> check_constraints(
         const int j      = pairs[idx_pair].j;
         const double dij = pairs[idx_pair].dij; // desired constrained bond length
 
-        Vector3 s         = mic( positions[i] - positions[j], cell_lengths, pbc );
+        Vector3 s         = mic( positions.row( i ) - positions.row( j ), cell_lengths, pbc );
         double s2         = s.squaredNorm();
         const double dij2 = dij * dij;
         const double hij  = abs( s2 - dij2 ); // holonomic constraint
         max_hij           = std::max( max_hij, hij );
 
-        const Vector3 vij  = velocities[i] - velocities[j];
-        const Vector3 rij  = positions[i] - positions[j];
+        const Vector3 vij  = velocities.row( i ) - velocities.row( j );
+        const Vector3 rij  = positions.row( i ) - positions.row( j );
         const double hij_v = abs( rij.dot( vij ) );
         max_hij_v          = std::max( max_hij_v, hij_v );
     }

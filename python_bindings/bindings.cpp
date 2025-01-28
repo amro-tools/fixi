@@ -4,6 +4,7 @@
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 
 // Bindings
+#include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
