@@ -1,5 +1,6 @@
-#include "fixi/defines.hpp"
+#include <fixi/defines.hpp>
 #include <fixi/rattle.hpp>
+#include <fixi/utils.hpp>
 
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 
@@ -29,5 +30,7 @@ PYBIND11_MODULE( fixicpp, m )
     py::class_<Fixi::Rattle>( m, "Rattle" )
         .def( py::init<int, double, std::vector<Fixi::FixedBondLengthPair>, std::array<bool, 3>>() )
         .def( "adjust_positions", &Fixi::Rattle::adjust_positions )
-        .def( "adjust_momenta", &Fixi::Rattle::adjust_velocities );
+        .def( "adjust_velocities", &Fixi::Rattle::adjust_velocities );
+
+    m.def( "check_constraints", &Fixi::check_constraints, "Checks constraints." );
 }
