@@ -78,8 +78,9 @@ py.extension_module(
 # pyflowy main package
 py.install_sources([
     'pyfixi/__init__.py',
+    'pyfixi/constraints.py'
   ],
   pure: false, # install next to compiled extension
-  subdir: 'pyfixi'
+  subdir: 'pyfixi/'
 )
 
