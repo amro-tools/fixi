@@ -11,6 +11,7 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
+#include <format>
 
 // Namespaces
 using namespace std::string_literals; // For ""s
@@ -24,6 +25,9 @@ PYBIND11_MODULE( fixicpp, m )
         .def_readwrite( "i", &Fixi::FixedBondLengthPair::i )
         .def_readwrite( "j", &Fixi::FixedBondLengthPair::j )
         .def_readwrite( "dij", &Fixi::FixedBondLengthPair::dij )
+        .def(
+            "__str__",
+            []( const Fixi::FixedBondLengthPair & p ) { return std::format( "i={}, j={}, dij={}", p.i, p.j, p.dij ); } )
         .def( py::pickle(
             []( const Fixi::FixedBondLengthPair & p ) { // __getstate__
                 /* Return a tuple that fully encodes the state of the object */
@@ -34,9 +38,9 @@ PYBIND11_MODULE( fixicpp, m )
                 if( t.size() != 3 )
                     throw std::runtime_error( "Invalid state for FixedBondLengthPair object!" );
 
-                int i      = t[0].cast<int>();
-                int j      = t[1].cast<int>();
-                double dij = t[2].cast<double>();
+                const int i      = t[0].cast<int>();
+                const int j      = t[1].cast<int>();
+                const double dij = t[2].cast<double>();
 
                 auto p = Fixi::FixedBondLengthPair();
                 p.i    = i;
@@ -48,6 +52,9 @@ PYBIND11_MODULE( fixicpp, m )
 
     py::class_<Fixi::Rattle>( m, "Rattle" )
         .def( py::init<int, double, std::vector<Fixi::FixedBondLengthPair>>() )
+        .def_readwrite( "maxiter", &Fixi::Rattle::maxiter )
+        .def_readwrite( "tolerance", &Fixi::Rattle::tolerance )
+        .def( "get_pairs", &Fixi::Rattle::get_pairs )
         .def( "adjust_positions", &Fixi::Rattle::adjust_positions )
         .def( "adjust_velocities", &Fixi::Rattle::adjust_velocities )
         .def( py::pickle(
