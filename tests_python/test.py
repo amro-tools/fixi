@@ -76,3 +76,14 @@ check = pyfixi.check_constraints(
     pairs, adjusted_positions, velocities, cell_lengths, [False, False, False]
 )
 print(check)
+
+import pickle
+
+with open("pickle_test", "wb") as f:
+    pickle.dump(rattle, f)
+
+with open("pickle_test", "rb") as file:
+    r = pickle.load(file)
+    print(r.maxiter)
+    print(r.tolerance)
+    print(r.get_pairs()[2])

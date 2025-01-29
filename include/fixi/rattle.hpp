@@ -11,16 +11,21 @@ class Rattle
 {
     const std::vector<FixedBondLengthPair> pairs{};
     const std::vector<std::vector<FixedBondLengthPair>> buckets{};
+    int iteration{ 0 };
 
 public:
     int maxiter{};
     double tolerance{};
+
     const std::vector<FixedBondLengthPair> & get_pairs() const
     {
         return pairs;
     }
 
-    int iteration{ 0 };
+    int get_iteration() const
+    {
+        return iteration;
+    }
 
     Rattle( int maxiter, double tolerance, const std::vector<FixedBondLengthPair> & pairs )
             : pairs( pairs ), buckets( bucket_sorter( pairs ) ), maxiter( maxiter ), tolerance( tolerance )
