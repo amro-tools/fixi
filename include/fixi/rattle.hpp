@@ -12,21 +12,20 @@ class Rattle
     const int maxiter{};
     const double tolerance{};
     const std::vector<FixedBondLengthPair> pairs{};
-    const std::array<bool, 3> pbc{};
+    // const std::array<bool, 3> pbc{};
     const std::vector<std::vector<FixedBondLengthPair>> buckets{};
 
 public:
     int iteration{ 0 };
 
-    Rattle(
-        int maxiter, double tolerance, const std::vector<FixedBondLengthPair> & pairs, const std::array<bool, 3> & pbc )
-            : maxiter( maxiter ), tolerance( tolerance ), pairs( pairs ), pbc( pbc ), buckets( bucket_sorter( pairs ) )
+    Rattle( int maxiter, double tolerance, const std::vector<FixedBondLengthPair> & pairs )
+            : maxiter( maxiter ), tolerance( tolerance ), pairs( pairs ), buckets( bucket_sorter( pairs ) )
     {
     }
 
     void adjust_positions(
         const Eigen::Ref<Vectorfield> unadjusted_positions, Eigen::Ref<Vectorfield> adjusted_positions,
-        const Vector3 & cell_lengths )
+        Eigen::Ref<Scalarfield> masses, const Vector3 & cell_lengths, const std::array<bool, 3> & pbc )
     {
         iteration = 0;
         double hij_max{ 0.0 };
@@ -42,8 +41,8 @@ public:
 
                     const int i      = pair.i;
                     const int j      = pair.j;
-                    const double mi  = pair.mass_i;
-                    const double mj  = pair.mass_j;
+                    const double mi  = masses[i];
+                    const double mj  = masses[j];
                     const double dij = pair.dij; // desired constrained bond length
 
                     // `s` is the current approximation for the vector displacement between atoms i and j
@@ -81,7 +80,7 @@ public:
 
     void adjust_velocities(
         const Eigen::Ref<Vectorfield> positions, Eigen::Ref<Vectorfield> adjusted_velocities,
-        const Vector3 & cell_lengths )
+        Eigen::Ref<Scalarfield> masses, const Vector3 & cell_lengths, const std::array<bool, 3> & pbc )
     {
 
         iteration = 0;
@@ -98,8 +97,8 @@ public:
 
                     const int i       = pair.i;
                     const int j       = pair.j;
-                    const double mi   = pair.mass_i;
-                    const double mj   = pair.mass_j;
+                    const double mi   = masses[i];
+                    const double mj   = masses[j];
                     const double dij  = pair.dij; // desired constrained bond length
                     const double dij2 = dij * dij;
 

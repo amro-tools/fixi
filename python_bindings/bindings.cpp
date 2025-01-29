@@ -23,12 +23,10 @@ PYBIND11_MODULE( fixicpp, m )
         .def( py::init<>() )
         .def_readwrite( "i", &Fixi::FixedBondLengthPair::i )
         .def_readwrite( "j", &Fixi::FixedBondLengthPair::j )
-        .def_readwrite( "mass_i", &Fixi::FixedBondLengthPair::mass_i )
-        .def_readwrite( "mass_j", &Fixi::FixedBondLengthPair::mass_j )
         .def_readwrite( "dij", &Fixi::FixedBondLengthPair::dij );
 
     py::class_<Fixi::Rattle>( m, "Rattle" )
-        .def( py::init<int, double, std::vector<Fixi::FixedBondLengthPair>, std::array<bool, 3>>() )
+        .def( py::init<int, double, std::vector<Fixi::FixedBondLengthPair>>() )
         .def( "adjust_positions", &Fixi::Rattle::adjust_positions )
         .def( "adjust_velocities", &Fixi::Rattle::adjust_velocities );
 

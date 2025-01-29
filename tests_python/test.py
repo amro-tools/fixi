@@ -19,6 +19,13 @@ pbc = [False, False, False]
 
 
 pairs = []
+masses = np.zeros(n_atoms)
+masses[::3] = mO
+masses[1::3] = mH
+masses[2::3] = mH
+
+
+# Define pairs and masses
 for i in range(n_molecules):
     idx_O = 3 * i
     idx_H1 = 3 * i + 1
@@ -28,24 +35,18 @@ for i in range(n_molecules):
     pair.i = idx_O
     pair.j = idx_H1
     pair.dij = r_OH
-    pair.mass_i = mO
-    pair.mass_j = mH
     pairs.append(pair)
 
     pair = pyfixi.fixicpp.FixedBondLengthPair()
     pair.i = idx_O
     pair.j = idx_H2
     pair.dij = r_OH
-    pair.mass_i = mO
-    pair.mass_j = mH
     pairs.append(pair)
 
     pair = pyfixi.fixicpp.FixedBondLengthPair()
     pair.i = idx_H1
     pair.j = idx_H2
     pair.dij = r_HH
-    pair.mass_i = mH
-    pair.mass_j = mH
     pairs.append(pair)
 
 # Define the positions
@@ -62,14 +63,14 @@ positions = np.array(positions)
 velocities = 0.1 * np.random.uniform(size=(n_atoms, 3))
 
 
-rattle = pyfixi.fixicpp.Rattle(maxiter, tolerance, pairs, pbc)
+rattle = pyfixi.fixicpp.Rattle(maxiter, tolerance, pairs)
 
 
 adjusted_positions = np.array(positions)
 
 
-rattle.adjust_positions(positions, adjusted_positions, cell_lengths)
-rattle.adjust_velocities(adjusted_positions, velocities, cell_lengths)
+rattle.adjust_positions(positions, adjusted_positions, masses, cell_lengths, pbc)
+rattle.adjust_velocities(adjusted_positions, velocities, masses, cell_lengths, pbc)
 
 check = pyfixi.check_constraints(
     pairs, adjusted_positions, velocities, cell_lengths, [False, False, False]

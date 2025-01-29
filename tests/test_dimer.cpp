@@ -13,10 +13,10 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
 {
     int n_atoms = { 2 };
     double rij  = 1.0;
-    double m    = 1.0;
 
     const int maxiter      = 20;
     const double tolerance = 1e-6;
+    const double m         = 1.0;
     const std::array<bool, 3> pbc{ true, true, false };
     const Fixi::Vector3 cell_lengths = { 20.0, 20.0, 20.0 };
 
@@ -24,15 +24,19 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
     Fixi::Vectorfield velocities( n_atoms, 3 );
     std::vector<Fixi::FixedBondLengthPair> pairs{};
 
+    Fixi::Scalarfield masses = Fixi::Scalarfield( n_atoms );
+    masses( 0 )              = m;
+    masses( 1 )              = m;
+
     positions.row( 0 ) = Fixi::Vector3::Zero();
     positions.row( 1 ) = positions.row( 0 ) + 2.0 * rij * Fixi::Vector3::Random().normalized();
 
     velocities.row( 0 ) = Fixi::Vector3::Random();
     velocities.row( 1 ) = Fixi::Vector3::Random();
 
-    pairs.push_back( { 0, 1, rij, m, m } );
+    pairs.push_back( { 0, 1, rij } );
 
-    auto rattle = Fixi::Rattle( maxiter, tolerance, pairs, pbc );
+    auto rattle = Fixi::Rattle( maxiter, tolerance, pairs );
 
     auto adjusted_positions = positions;
 
@@ -41,7 +45,7 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
 
     INFO( std::format( "hij_before {}\n", hij_before ) );
 
-    rattle.adjust_positions( positions, adjusted_positions, cell_lengths );
+    rattle.adjust_positions( positions, adjusted_positions, masses, cell_lengths, pbc );
     INFO( std::format( "iterations {}\n", rattle.iteration ) );
 
     auto [hij, hij_v] = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
@@ -53,7 +57,7 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
         = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
     INFO( std::format( "hij_v_before {}\n", hij_v2_before ) );
 
-    rattle.adjust_velocities( adjusted_positions, velocities, cell_lengths );
+    rattle.adjust_velocities( adjusted_positions, velocities, masses, cell_lengths, pbc );
     INFO( std::format( "iterations {}\n", rattle.iteration ) );
 
     auto [hij2_after, hij_v2_after]

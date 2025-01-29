@@ -24,9 +24,10 @@ TEST_CASE( "Test that the positions and velocities can be constrained using RATT
 
     Fixi::Vectorfield positions( n_atoms, 3 );
     Fixi::Vectorfield velocities( n_atoms, 3 );
+    Fixi::Scalarfield masses( n_atoms );
     std::vector<Fixi::FixedBondLengthPair> pairs{};
 
-    // Define positions
+    // Define positions and masses
     for( int i = 0; i < n_molecules; i++ )
     {
         const int idx_O  = 3 * i;
@@ -36,6 +37,10 @@ TEST_CASE( "Test that the positions and velocities can be constrained using RATT
         positions.row( idx_O )  = 2.0 * Fixi::Vector3::Random();
         positions.row( idx_H1 ) = positions.row( idx_O ) + 0.4 * Fixi::Vector3::Random();
         positions.row( idx_H2 ) = positions.row( idx_O ) + 0.4 * Fixi::Vector3::Random();
+
+        masses( idx_O )  = mO;
+        masses( idx_H1 ) = mH;
+        masses( idx_H2 ) = mH;
     }
 
     // Define velocities
@@ -57,12 +62,12 @@ TEST_CASE( "Test that the positions and velocities can be constrained using RATT
         const int idx_H1 = idx_O + 1;
         const int idx_H2 = idx_O + 2;
 
-        pairs.push_back( { idx_O, idx_H1, r_OH, mO, mH } );
-        pairs.push_back( { idx_O, idx_H2, r_OH, mO, mH } );
-        pairs.push_back( { idx_H1, idx_H2, r_HH, mH, mH } );
+        pairs.push_back( { idx_O, idx_H1, r_OH } );
+        pairs.push_back( { idx_O, idx_H2, r_OH } );
+        pairs.push_back( { idx_H1, idx_H2, r_HH } );
     }
 
-    auto rattle = Fixi::Rattle( maxiter, tolerance, pairs, pbc );
+    auto rattle = Fixi::Rattle( maxiter, tolerance, pairs );
 
     Fixi::Vectorfield adjusted_positions = positions;
 
@@ -71,7 +76,7 @@ TEST_CASE( "Test that the positions and velocities can be constrained using RATT
 
     INFO( std::format( "hij_before {}\n", hij_before ) );
 
-    rattle.adjust_positions( positions, adjusted_positions, cell_lengths );
+    rattle.adjust_positions( positions, adjusted_positions, masses, cell_lengths, pbc );
     INFO( std::format( "iterations {}\n", rattle.iteration ) );
 
     auto [hij, hij_v] = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
@@ -83,7 +88,7 @@ TEST_CASE( "Test that the positions and velocities can be constrained using RATT
         = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
     INFO( std::format( "hij_v_before {}\n", hij_v2_before ) );
 
-    rattle.adjust_velocities( adjusted_positions, velocities, cell_lengths );
+    rattle.adjust_velocities( adjusted_positions, velocities, masses, cell_lengths, pbc );
     INFO( std::format( "iterations {}\n", rattle.iteration ) );
 
     auto [hij2_after, hij_v2_after]
