@@ -9,17 +9,21 @@ namespace Fixi
 
 class Rattle
 {
-    const int maxiter{};
-    const double tolerance{};
     const std::vector<FixedBondLengthPair> pairs{};
-    // const std::array<bool, 3> pbc{};
     const std::vector<std::vector<FixedBondLengthPair>> buckets{};
 
 public:
+    int maxiter{};
+    double tolerance{};
+    const std::vector<FixedBondLengthPair> & get_pairs() const
+    {
+        return pairs;
+    }
+
     int iteration{ 0 };
 
     Rattle( int maxiter, double tolerance, const std::vector<FixedBondLengthPair> & pairs )
-            : maxiter( maxiter ), tolerance( tolerance ), pairs( pairs ), buckets( bucket_sorter( pairs ) )
+            : pairs( pairs ), buckets( bucket_sorter( pairs ) ), maxiter( maxiter ), tolerance( tolerance )
     {
     }
 
