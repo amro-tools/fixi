@@ -26,7 +26,7 @@ deps = []
 fixi_dep = declare_dependency(include_directories : inc)
 deps += fixi_dep
 
-omp_dep = dependency('openmp')
+omp_dep = dependency('openmp', required : false)
 if omp_dep.found()
   deps += omp_dep
   cpp_args += '-fopenmp'
