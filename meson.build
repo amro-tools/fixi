@@ -13,7 +13,6 @@ cpp_args += compiler.get_supported_arguments([
   '-fno-semantic-interposition', # Assume no interposition for module functions
   '-fno-plt',                    # Avoid PLT for function calls within shared libs
   '-Bsymbolic',                  # Resolve symbols to local definitions
-  '-fopenmp'
 ])
 
 if cpp_args.length() > 0
@@ -25,11 +24,15 @@ inc = include_directories([['include', 'thirdparty']])
 deps = []
 
 fixi_dep = declare_dependency(include_directories : inc)
-omp_dep = dependency('openmp')
-
 deps += fixi_dep
-deps += omp_dep
 
+omp_dep = dependency('openmp')
+if omp_dep.found()
+  deps += omp_dep
+  cpp_args += '-fopenmp'
+else 
+  warning('Building without OpenMP')
+endif
 
 executable('fixi_cli', 'src/main.cpp', include_directories : inc, cpp_args : cpp_args, dependencies : deps)
 
