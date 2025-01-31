@@ -54,12 +54,19 @@ foreach t : tests
 endforeach
 
 # Python module
-
 py = import('python').find_installation('python', modules: ['numpy'])
+
+incdir_numpy = run_command(py,
+  ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'],
+  check : true
+).stdout().strip()
+inc_np = include_directories(incdir_numpy)
+np_dep = declare_dependency(include_directories: inc_np)
 
 python_deps = deps + [
   py.dependency(),
   dependency('pybind11'),
+  np_dep
 ]
 
 # for the bindings
