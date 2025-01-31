@@ -10,6 +10,5 @@ dependencies:
   - meson>=1.2.3
   - meson-python
   - pip
-pip:
   - numpy
   - ase
