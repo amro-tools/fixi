@@ -11,7 +11,7 @@
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
-#include <format>
+#include <string>
 
 // Namespaces
 using namespace std::string_literals; // For ""s
@@ -27,7 +27,10 @@ PYBIND11_MODULE( fixicpp, m )
         .def_readwrite( "dij", &Fixi::FixedBondLengthPair::dij )
         .def(
             "__str__",
-            []( const Fixi::FixedBondLengthPair & p ) { return std::format( "i={}, j={}, dij={}", p.i, p.j, p.dij ); } )
+            []( const Fixi::FixedBondLengthPair & p ) {
+                return "i=" + std::to_string( p.i ) + ", j=" + std::to_string( p.j )
+                       + ", dij=" + std::to_string( p.dij ) + "\n";
+            } )
         .def( py::pickle(
             []( const Fixi::FixedBondLengthPair & p ) { // __getstate__
                 /* Return a tuple that fully encodes the state of the object */
