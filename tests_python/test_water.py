@@ -3,6 +3,7 @@ from ase.units import fs
 from ase.md.verlet import VelocityVerlet
 from ase.md.langevin import Langevin
 from ase.constraints import FixBondLengths
+from pyfixi import check_constraints
 from pyfixi.constraints import FixBondLengths
 from pathlib import Path
 
@@ -21,7 +22,7 @@ def constrain_water(atoms):
         pairs.append([iO, iH2])
         pairs.append([iH1, iH2])
 
-    atoms.set_constraint(FixBondLengths(pairs))
+    atoms.set_constraint(FixBondLengths(pairs, tolerance=1e-5))
 
 
 def construct_calculator(atoms):
@@ -31,7 +32,7 @@ def construct_calculator(atoms):
 
 
 def test_ase_constraints():
-    n_iter = 1000
+    n_iter = 100
     input_xyz = Path(__file__).parent / "resources/system.xyz"
     output_xyz = Path(__file__).parent / "final.xyz"
     temperature = 300
@@ -44,8 +45,6 @@ def test_ase_constraints():
 
     atoms.set_cell([20.0, 20.0, 20.0])
     atoms.calc = construct_calculator(atoms)
-
-    print(atoms.cell.cellpar())
 
     dt = 1 * fs
 
@@ -61,6 +60,19 @@ def test_ase_constraints():
 
     dyn.run(steps=n_iter)
     dyn.close()
+
+    fixi_constraint = atoms._get_constraints()[0]
+
+    hij_max, hij_max_v = check_constraints(
+        fixi_constraint.fixi_pairs,
+        atoms.get_positions(),
+        atoms.get_velocities(),
+        atoms.cell.cellpar()[:3],
+        atoms.get_pbc(),
+    )
+
+    assert hij_max < fixi_constraint.tolerance
+    assert hij_max_v < fixi_constraint.tolerance
 
     if not output_xyz is None:
         with open(output_xyz, "w") as f:
