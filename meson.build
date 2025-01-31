@@ -45,16 +45,18 @@ tests = [
 test_inc = []
 test_inc += inc
 
-Catch2 = dependency('Catch2', method : 'cmake', modules : ['Catch2::Catch2WithMain', 'Catch2::Catch2'])
+Catch2 = dependency('Catch2', method : 'cmake', modules : ['Catch2::Catch2WithMain', 'Catch2::Catch2'], required : false)
 
-foreach t : tests
-  exe = executable(t.get(0), t.get(1),
-    dependencies : [Catch2, deps],
-    include_directories : test_inc,
-    cpp_args : cpp_args
-  )
-  test(t.get(0), exe, workdir : meson.project_source_root())
-endforeach
+if Catch2.found()
+  foreach t : tests
+    exe = executable(t.get(0), t.get(1),
+      dependencies : [Catch2, deps],
+      include_directories : test_inc,
+      cpp_args : cpp_args
+    )
+    test(t.get(0), exe, workdir : meson.project_source_root())
+  endforeach
+endif
 
 # Python module
 py = import('python').find_installation('python', modules: ['numpy'])
