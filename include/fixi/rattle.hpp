@@ -32,7 +32,7 @@ public:
     {
     }
 
-    void adjust_positions(
+    double adjust_positions(
         const Eigen::Ref<Vectorfield> unadjusted_positions, Eigen::Ref<Vectorfield> adjusted_positions,
         const Eigen::Ref<Scalarfield> masses, const Vector3 & cell_lengths, const std::array<bool, 3> & pbc )
     {
@@ -85,9 +85,11 @@ public:
             }
             iteration++;
         } while( ( hij_max > tolerance ) && ( iteration < maxiter ) );
+
+        return hij_max;
     }
 
-    void adjust_velocities(
+    double adjust_velocities(
         const Eigen::Ref<Vectorfield> positions, Eigen::Ref<Vectorfield> adjusted_velocities,
         const Eigen::Ref<Scalarfield> masses, const Vector3 & cell_lengths, const std::array<bool, 3> & pbc )
     {
@@ -131,6 +133,8 @@ public:
             }
             iteration++;
         } while( ( hij_max > tolerance ) && ( iteration < maxiter ) );
+
+        return hij_max;
     }
 };
 
