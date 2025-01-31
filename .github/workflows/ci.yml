@@ -39,4 +39,5 @@ jobs:
     - name: Test with pytest
       shell: micromamba-shell {0}
       run: |
+        pip install .
         pytest -v
