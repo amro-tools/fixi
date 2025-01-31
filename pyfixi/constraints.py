@@ -65,7 +65,7 @@ class FixBondLengths(FixConstraint):
         pbc = atoms.get_pbc()
         masses = atoms.get_masses()
 
-        self.rattle.adjust_positions(
+        self.hij_max = self.rattle.adjust_positions(
             unadjusted_positions, newpositions, masses, cell_lengths, pbc
         )
 
@@ -84,11 +84,11 @@ class FixBondLengths(FixConstraint):
         cell_lengths = atoms.cell.cellpar()[:3]
         pbc = atoms.get_pbc()
 
-        self.rattle.adjust_velocities(
+        self.hij_max_v = self.rattle.adjust_velocities(
             positions, adjusted_velocities, masses, cell_lengths, pbc
         )
 
-        momenta = adjusted_velocities * masses3
+        momenta[:] = adjusted_velocities * masses3
 
     def get_indices(self):
         return np.unique(self.pairs.ravel())
