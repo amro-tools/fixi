@@ -1,6 +1,6 @@
 # Fixi
 
-`Fixi`, so far, implements bond length constraints using the RATTLE algorithm [1]. `Fixi` is written in `C++20` and has optional support for multi-threading with `OpenMP`. `Fixi` also provides an interface to `ASE` [2,3], so that that it can be used as a drop-in replacement for `ASE`'s `FixedBondLengths` class (see also the example `tests_python/test_water.py`). 
+`Fixi`, so far, implements bond length constraints using the RATTLE algorithm [1]. `Fixi` is written in `C++17` and has optional support for multi-threading with `OpenMP`. `Fixi` also provides an interface to `ASE` [2,3], so that that it can be used as a drop-in replacement for `ASE`'s `FixedBondLengths` class (see also the example `tests_python/test_water.py`). 
 
 ## Installation
 

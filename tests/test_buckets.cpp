@@ -2,8 +2,7 @@
 #include <cstddef>
 #include <fixi/buckets.hpp>
 #include <fixi/defines.hpp>
-#include <format>
-#include <iostream>
+#include <string>
 
 bool check_bucket( const std::vector<Fixi::FixedBondLengthPair> & bucket )
 {
@@ -41,17 +40,18 @@ TEST_CASE( "Test pairs are correctly sorted into buckets", "[PairsInBuckets]" )
 
     const size_t n_buckets = buckets.size();
 
-    INFO( std ::format( "There are {} buckets\n", n_buckets ) );
+    INFO( "There are " + std::to_string( n_buckets ) + "buckets\n" );
 
     for( size_t ibucket = 0; ibucket < n_buckets; ibucket++ )
     {
-        std::cout << std::format( "ibucket = {}\n", ibucket ) << "\n";
+        INFO( "ibucket " + std::to_string( ibucket ) + "\n" );
+
         const auto & bucket = buckets[ibucket];
 
         for( size_t ipair = 0; ipair < bucket.size(); ipair++ )
         {
             const auto pair = bucket[ipair];
-            std::cout << std::format( "    i = {}, j = {}\n", pair.i, pair.j ) << "\n";
+            INFO( "i = " + std::to_string( pair.i ) + ", j = " + std::to_string( pair.j ) + "\n" );
         }
     }
 

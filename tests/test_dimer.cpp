@@ -3,10 +3,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
-#include <cstdio>
 #include <fixi/defines.hpp>
 #include <fixi/rattle.hpp>
-#include <format>
 #include <iostream>
 
 TEST_CASE( "Test that the positions and velocities of two atoms can be constrained using RATTLE", "[SingleBond]" )
@@ -43,26 +41,26 @@ TEST_CASE( "Test that the positions and velocities of two atoms can be constrain
     auto [hij_before, hij_v_before]
         = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
 
-    INFO( std::format( "hij_before {}\n", hij_before ) );
+    INFO( "hij_before " + std::to_string( hij_before ) + "\n" );
 
     rattle.adjust_positions( positions, adjusted_positions, masses, cell_lengths, pbc );
-    INFO( std::format( "iterations {}\n", rattle.get_iteration() ) );
+    INFO( "iterations " + std::to_string( rattle.get_iteration() ) + "\n" );
 
     auto [hij, hij_v] = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
-    INFO( std::format( "hij_after {}\n", hij ) );
+    INFO( "hij_after " + std::to_string( hij ) + "\n" );
 
     REQUIRE_THAT( hij, Catch::Matchers::WithinAbs( 0.0, tolerance ) );
 
     auto [hij2_before, hij_v2_before]
         = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
-    INFO( std::format( "hij_v_before {}\n", hij_v2_before ) );
+    INFO( "hij_v_before " + std::to_string( hij_v2_before ) + "\n" );
 
     rattle.adjust_velocities( adjusted_positions, velocities, masses, cell_lengths, pbc );
-    INFO( std::format( "iterations {}\n", rattle.get_iteration() ) );
+    INFO( "iterations  " + std::to_string( rattle.get_iteration() ) + "\n" );
 
     auto [hij2_after, hij_v2_after]
         = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
-    INFO( std::format( "hij_v_after {}\n", hij_v2_after ) );
+    INFO( "hij_v_after " + std::to_string( hij_v2_after ) + "\n" );
 
     REQUIRE_THAT( hij_v2_after, Catch::Matchers::WithinAbs( 0.0, tolerance ) );
 }
