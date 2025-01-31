@@ -6,8 +6,8 @@
 #include <fixi/defines.hpp>
 #include <fixi/rattle.hpp>
 #include <fixi/utils.hpp>
-#include <format>
 #include <iostream>
+#include <string>
 
 int get_n_threads()
 {
@@ -80,7 +80,7 @@ int main()
         // pairs.push_back( { idx_H1, idx_H2, r_HH, mH, mH } );
     }
 
-    std::cout << std::format( "{} threads\n", get_n_threads() );
+    std::cout << std::to_string( get_n_threads() ) << " threads\n";
 
     auto rattle = Fixi::Rattle( maxiter, tolerance, pairs );
 
@@ -96,8 +96,8 @@ int main()
     auto t2 = std::chrono::high_resolution_clock::now();
     /* Getting number of milliseconds as an integer. */
     auto ms_int = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 );
-    std::cout << std::format( " duration = {}\n", ms_int );
-    std::cout << std::format( " iterations = {}\n", rattle.get_iteration() );
+    std::cout << " duration = " + std::to_string( ms_int.count() ) + "\n";
+    std::cout << std::to_string( rattle.get_iteration() ) << " iterations = {}\n";
 
     auto [hij, hij_v] = Fixi::check_constraints( pairs, adjusted_positions, velocities, cell_lengths, pbc );
     std::cout << "hij_after " << hij << "\n";
