@@ -22,7 +22,7 @@ First create the environment, then activate it.
 micromamba create -f environment.yml # only once
 micromamba activate fixienv # every time 
 ```
-After you have activated the environment it shoudl be possible to install fixi with `pip install .`
+After you have activated the environment it should be possible to install `Fixi` with `pip install .`
 
 ## Advanced building and running the tests
 
