@@ -71,7 +71,7 @@ public:
                     const double g = ( s2 - dij2 ) / ( 2.0 * ( s.dot( rij ) ) * ( 1.0 / mi + 1.0 / mj ) );
 
                     adjusted_positions.row( i ) += -g * rij / mi;
-                    adjusted_positions.row( j ) -= -g * rij / mi;
+                    adjusted_positions.row( j ) -= -g * rij / mj;
 
                     return hij;
                 };
