@@ -76,4 +76,6 @@ PYBIND11_MODULE( fixicpp, m )
             } ) );
 
     m.def( "check_constraints", &Fixi::check_constraints, "Checks constraints." );
+    m.def( "set_num_threads", &Fixi::Backend::set_num_threads );
+    m.def( "get_num_threads", &Fixi::Backend::get_num_threads );
 }
