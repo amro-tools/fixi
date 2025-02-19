@@ -90,6 +90,14 @@ class FixBondLengths(FixConstraint):
 
         momenta[:] = adjusted_velocities * masses3
 
+    def adjust_forces(self, atoms, forces):
+        """
+        Used in energy minimization in ASE
+        """
+        self.constraint_forces = -forces
+        self.adjust_momenta(atoms, forces)
+        self.constraint_forces += forces
+
     def get_indices(self):
         return np.unique(self.pairs.ravel())
 
