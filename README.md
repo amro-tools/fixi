@@ -4,15 +4,19 @@
 
 ## Installation
 
-To install, clone the repository and run `pip install`:
+To install
+
+```bash
+pip install git+https://github.com/amro-tools/fixi.git@main
+```
+
+Or, alternatively, clone the repository and run `pip install` from inside the root folder:
 ```bash
 pip install .
 ```
 
-*NOTE:* The `pip install` command will try to compile the C++ source code and build a binary wheel. 
-Hence, this step depends on your system being equipped with a working `C++` compiler and the necessary build tools. 
-We recommend to obtain them from the shipped conda `environment.yml` file. 
-See below:
+**NOTE:** The `pip install` command will try to compile the C++ source code and build a binary wheel. 
+Hence, this step depends on your system being equipped with **a working `C++20` compiler** and the necessary build tools. 
 
 ## Obtaining build dependencies
 We use micromamba here, but `conda` or `mamba` will work just as well.
@@ -71,6 +75,10 @@ The number of threads is controlled via the `OMP_NUM_THREADS` environment variab
 ```bash
 export OMP_NUM_THREADS=2
 ```
+
+## Known bugs
+
+- The editable pip install doesn't work. 
 
 ## References
 [1] Hans C Andersen, Rattle: A “velocity” version of the shake algorithm for molecular dynamics calculations, Journal of Computational Physics, Volume 52, Issue 1, 1983
