@@ -45,8 +45,12 @@ pytest -v
 ```
 
 ## PYPI
+TODO.
 
-TODO
+For now, you can just do this (without having to clone the repository first):
+```bash
+pip install git+https://github.com/amro-tools/fixi.git@main
+```
 
 ## Usage
 
