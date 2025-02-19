@@ -1,11 +1,8 @@
-from ase.io import read, write, Trajectory
 from ase.units import fs
-from ase.md.verlet import VelocityVerlet
 from ase.md.langevin import Langevin
-from ase.constraints import FixBondLengths
+from ase.optimize.fire2 import FIRE2
 from pyfixi import check_constraints
 from pyfixi.constraints import FixBondLengths
-from pathlib import Path
 
 
 def constrain_water(atoms):
@@ -31,19 +28,28 @@ def construct_calculator(atoms):
     return TIP4P()
 
 
-def test_ase_constraints():
+def check(atoms):
+    fixi_constraint = atoms._get_constraints()[0]
+
+    hij_max, hij_max_v = check_constraints(
+        fixi_constraint.fixi_pairs,
+        atoms.get_positions(),
+        atoms.get_velocities(),
+        atoms.cell.cellpar()[:3],
+        atoms.get_pbc(),
+    )
+
+    assert hij_max < fixi_constraint.tolerance
+    assert hij_max_v < fixi_constraint.tolerance
+
+
+def test_ase_constraints_nvt(water_system):
     n_iter = 100
-    input_xyz = Path(__file__).parent / "resources/system.xyz"
-    output_xyz = Path(__file__).parent / "final.xyz"
     temperature = 300
     logfile = "log.txt"
     friction = 0.5
 
-    # Read the system using ASE
-    with open(input_xyz, "r") as f:
-        atoms = read(f, format="xyz")
-
-    atoms.set_cell([20.0, 20.0, 20.0])
+    atoms = water_system
     atoms.calc = construct_calculator(atoms)
 
     dt = 1 * fs
@@ -61,22 +67,32 @@ def test_ase_constraints():
     dyn.run(steps=n_iter)
     dyn.close()
 
-    fixi_constraint = atoms._get_constraints()[0]
+    check(atoms)
 
-    hij_max, hij_max_v = check_constraints(
-        fixi_constraint.fixi_pairs,
-        atoms.get_positions(),
-        atoms.get_velocities(),
-        atoms.cell.cellpar()[:3],
-        atoms.get_pbc(),
+
+def test_ase_constraints_min(water_system):
+    fmax = 5e-1
+    logfile = "log_min.txt"
+
+    atoms = water_system
+    atoms.calc = construct_calculator(atoms)
+
+    dt = 0.1 * fs
+
+    dyn = FIRE2(
+        atoms,
+        dt=dt,
+        logfile=logfile,
     )
 
-    assert hij_max < fixi_constraint.tolerance
-    assert hij_max_v < fixi_constraint.tolerance
+    constrain_water(atoms)
 
-    if not output_xyz is None:
-        with open(output_xyz, "w") as f:
-            write(f, atoms)
+    dyn.run(fmax=fmax)
+    dyn.close()
+
+    check(atoms)
 
 
-test_ase_constraints()
+if __name__ == "__main__":
+    test_ase_constraints_nvt()
+    test_ase_constraints_min()
