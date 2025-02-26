@@ -11,6 +11,8 @@ class Rattle
 {
     const std::vector<FixedBondLengthPair> pairs{};
     const std::vector<std::vector<FixedBondLengthPair>> buckets{};
+    std::vector<std::vector<double>> pairwise_hg_ij{};
+
     int iteration{ 0 };
 
 public:
@@ -30,6 +32,11 @@ public:
     Rattle( int maxiter, double tolerance, const std::vector<FixedBondLengthPair> & pairs )
             : pairs( pairs ), buckets( bucket_sorter( pairs ) ), maxiter( maxiter ), tolerance( tolerance )
     {
+        pairwise_hg_ij.resize( buckets.size() );
+        for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
+        {
+            pairwise_hg_ij[idx_bucket].resize( buckets[idx_bucket].size() );
+        }
     }
 
     double adjust_positions(
@@ -42,9 +49,18 @@ public:
         {
             hij_max = 0.0;
 
+            int idx_bucket = 0;
             // In order not to create any race conditions we iterate over the buckets serially
             for( const auto & bucket : buckets )
             {
+                const int n_pairs_bucket = bucket.size();
+#pragma omp parallel for
+                for( int idx_pair = 0; idx_pair < n_pairs_bucket; idx_pair++ )
+                {
+                    pairwise_hg_ij[idx_bucket][idx_pair] = 0;
+                }
+                idx_bucket++;
+
                 auto cb = [&]( int idx_pair ) {
                     const auto & pair = bucket[idx_pair];
 
@@ -64,14 +80,18 @@ public:
 
                     const double hij = abs( s2 - dij2 ); // holonomic constraint
 
-                    // if the constraint is violated adjust adjusted_positions
-                    // this is achieved by iteratively solving
-                    //   |adjusted_positions[i] - adjusted_positions[j]|^2 = dij^2
-                    // Neglect g^2 term in derivation (also h cancels so we don't need the step size)
-                    const double g = ( s2 - dij2 ) / ( 2.0 * ( s.dot( rij ) ) * ( 1.0 / mi + 1.0 / mj ) );
+                    // if the constraint is violated change adjusted_positions
+                    // this is achieved by solving
+                    //   | (adjusted_positions[i] - h g r_ij / mi) - (adjusted_positions[j] + h g r_ij / mj) |^2 = dij^2
+                    // for g.
+                    // When neglecting g^2 terms in the derivation, we get (also h cancels so we don't need the step size)
+                    const double hg = ( s2 - dij2 ) / ( 2.0 * ( s.dot( rij ) ) * ( 1.0 / mi + 1.0 / mj ) );
 
-                    adjusted_positions.row( i ) += -g * rij / mi;
-                    adjusted_positions.row( j ) -= -g * rij / mj;
+                    adjusted_positions.row( i ) += -hg * rij / mi;
+                    adjusted_positions.row( j ) -= -hg * rij / mj;
+
+                    // accumulate the total lagrange multiplier
+                    pairwise_hg_ij[idx_bucket][idx_pair] += hg;
 
                     return hij;
                 };
