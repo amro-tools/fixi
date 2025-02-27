@@ -31,7 +31,6 @@ PYBIND11_MODULE( fixicpp, m )
         .def( py::pickle(
             []( const Fixi::FixedBondLengthPair & p ) { // __getstate__
                 /* Return a tuple that fully encodes the state of the object */
-
                 return py::make_tuple( p.i, p.j, p.dij );
             },
             []( py::tuple t ) { // __setstate__
@@ -56,6 +55,8 @@ PYBIND11_MODULE( fixicpp, m )
         .def_readwrite( "tolerance", &Fixi::Rattle::tolerance )
         .def( "get_iteration", &Fixi::Rattle::get_iteration )
         .def( "get_pairs", &Fixi::Rattle::get_pairs )
+        .def( "get_constraint_forces", &Fixi::Rattle::get_constraint_forces )
+        .def( "get_virial", &Fixi::Rattle::get_virial )
         .def( "adjust_positions", &Fixi::Rattle::adjust_positions )
         .def( "adjust_velocities", &Fixi::Rattle::adjust_velocities )
         .def( py::pickle(

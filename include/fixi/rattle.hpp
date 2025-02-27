@@ -1,5 +1,4 @@
 #pragma once
-#include <Eigen/Core>
 #include <fixi/backend.hpp>
 #include <fixi/buckets.hpp>
 #include <fixi/defines.hpp>
@@ -11,7 +10,9 @@ class Rattle
 {
     const std::vector<FixedBondLengthPair> pairs{};
     const std::vector<std::vector<FixedBondLengthPair>> buckets{};
+
     std::vector<std::vector<double>> pairwise_hg_ij{};
+    std::vector<std::vector<Vector3>> pairwise_constraint_forces{};
 
     int iteration{ 0 };
 
@@ -24,6 +25,66 @@ public:
         return pairs;
     }
 
+    const Vectorfield get_constraint_forces( int n_atoms ) const
+    {
+        Vectorfield forces( n_atoms, 3 );
+        forces.setZero();
+
+        for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
+        {
+            const auto & bucket = buckets[idx_bucket];
+
+#pragma omp parallel for
+            for( int idx_pair = 0; idx_pair < bucket.size(); idx_pair++ )
+            {
+                const auto & pair   = bucket[idx_pair];
+                const int i         = pair.i;
+                const int j         = pair.j;
+                const Vector3 & cij = pairwise_constraint_forces[idx_bucket][idx_pair];
+
+                forces.row( i ) += cij;
+                forces.row( j ) -= cij;
+            }
+        }
+        return forces;
+    }
+
+    Matrix3 get_virial(
+        double dt, const Eigen::Ref<Vectorfield> unadjusted_positions, const Vector3 & cell_lengths,
+        const std::array<bool, 3> & pbc )
+    {
+        Matrix3 stress_tensor = Matrix3::Zero();
+
+        // In order not to create any race conditions we iterate over the buckets serially
+        for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
+        {
+            const auto & bucket = buckets[idx_bucket];
+
+            auto cb = [&]( int idx_pair ) {
+                const auto pair = bucket[idx_pair];
+                const int i     = pair.i;
+                const int j     = pair.j;
+
+                // `s` is the current approximation for the vector displacement between atoms i and j
+                const Vector3 rij
+                    = mic( unadjusted_positions.row( i ) - unadjusted_positions.row( j ), cell_lengths, pbc );
+                const double hg   = pairwise_hg_ij[idx_bucket][idx_pair];
+                const Vector3 cij = 2.0 / ( dt * dt ) * hg * rij;
+
+                // Save the pairwise constraint forces
+                pairwise_constraint_forces[idx_bucket][idx_pair] = cij;
+
+                const Matrix3 stress_tensor_ij = rij.transpose() * cij;
+                return stress_tensor_ij;
+            };
+
+            auto red = [&]( auto & lhs, const auto & rhs ) { lhs += rhs; };
+
+            stress_tensor += Backend::transform_reduce<Matrix3>( bucket.size(), cb, red, Matrix3::Zero() );
+        }
+        return stress_tensor;
+    }
+
     int get_iteration() const
     {
         return iteration;
@@ -33,9 +94,12 @@ public:
             : pairs( pairs ), buckets( bucket_sorter( pairs ) ), maxiter( maxiter ), tolerance( tolerance )
     {
         pairwise_hg_ij.resize( buckets.size() );
+        pairwise_constraint_forces.resize( buckets.size() );
+
         for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
         {
             pairwise_hg_ij[idx_bucket].resize( buckets[idx_bucket].size() );
+            pairwise_constraint_forces[idx_bucket].resize( buckets[idx_bucket].size() );
         }
     }
 
@@ -48,18 +112,16 @@ public:
         do
         {
             hij_max = 0.0;
-
-            int idx_bucket = 0;
             // In order not to create any race conditions we iterate over the buckets serially
-            for( const auto & bucket : buckets )
+            for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
             {
+                const auto & bucket      = buckets[idx_bucket];
                 const int n_pairs_bucket = bucket.size();
 #pragma omp parallel for
                 for( int idx_pair = 0; idx_pair < n_pairs_bucket; idx_pair++ )
                 {
                     pairwise_hg_ij[idx_bucket][idx_pair] = 0;
                 }
-                idx_bucket++;
 
                 auto cb = [&]( int idx_pair ) {
                     const auto & pair = bucket[idx_pair];
@@ -113,7 +175,6 @@ public:
         const Eigen::Ref<Vectorfield> positions, Eigen::Ref<Vectorfield> adjusted_velocities,
         const Eigen::Ref<Scalarfield> masses, const Vector3 & cell_lengths, const std::array<bool, 3> & pbc )
     {
-
         iteration = 0;
         double hij_max{ 0.0 };
         do
@@ -121,9 +182,10 @@ public:
             hij_max = 0.0;
 
             // In order not to create any race conditions we iterate over the buckets serially
-            for( const auto & bucket : buckets )
+            for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
             {
-                auto cb = [&]( int idx_pair ) {
+                const auto & bucket = buckets[idx_bucket];
+                auto cb             = [&]( int idx_pair ) {
                     const auto & pair = bucket[idx_pair];
 
                     const int i       = pair.i;

@@ -27,14 +27,14 @@ inline int get_num_threads()
 // we don't want to have to declare a new reduction for each template instantiation and this
 // approach works seamlessly with templates
 template<typename result_t, typename CallbackT, typename ReductionT>
-result_t transform_reduce( size_t n_max, const CallbackT & cb, const ReductionT & red )
+result_t transform_reduce( size_t n_max, const CallbackT & cb, const ReductionT & red, result_t zero = result_t{ 0 } )
 {
-    result_t result{ 0.0 };
+    result_t result = zero;
 
 #pragma omp parallel
     {
         // Each thread has its own private sum
-        result_t private_result{ 0.0 };
+        result_t private_result = zero;
 
 // Distribute the loop iterations among threads
 #pragma omp for nowait
