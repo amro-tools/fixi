@@ -4,12 +4,6 @@ from ase.optimize.fire2 import FIRE2
 from pyfixi import check_constraints
 
 
-def construct_calculator(atoms):
-    from ase.calculators.tip4p import TIP4P
-
-    return TIP4P()
-
-
 def check(atoms):
     fixi_constraint = atoms._get_constraints()[0]
 
@@ -32,7 +26,6 @@ def test_ase_constraints_nvt(water_system):
     friction = 0.5
 
     atoms = water_system
-    atoms.calc = construct_calculator(atoms)
 
     dt = 1 * fs
 
@@ -55,8 +48,6 @@ def test_ase_constraints_min(water_system):
     logfile = "log_min.txt"
 
     atoms = water_system
-    atoms.calc = construct_calculator(atoms)
-
     dt = 0.1 * fs
 
     dyn = FIRE2(

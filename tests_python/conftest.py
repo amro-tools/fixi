@@ -1,7 +1,8 @@
-import pytest 
+import pytest
 from pathlib import Path
 from ase.io import read
 from pyfixi.constraints import FixBondLengths
+
 
 def constrain_water(atoms):
     n_atoms = len(atoms)
@@ -20,6 +21,12 @@ def constrain_water(atoms):
     atoms.set_constraint(FixBondLengths(pairs, tolerance=1e-5))
 
 
+def construct_calculator(atoms):
+    from ase.calculators.tip4p import TIP4P
+
+    return TIP4P()
+
+
 @pytest.fixture
 def water_system():
     input_xyz = Path(__file__).parent / "resources/system.xyz"
@@ -30,4 +37,5 @@ def water_system():
 
     atoms.set_cell([20.0, 20.0, 20.0])
     constrain_water(atoms)
+    atoms.calc = construct_calculator(atoms)
     return atoms
