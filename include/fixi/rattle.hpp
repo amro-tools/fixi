@@ -69,7 +69,7 @@ public:
                 const Vector3 rij
                     = mic( unadjusted_positions.row( i ) - unadjusted_positions.row( j ), cell_lengths, pbc );
                 const double hg   = pairwise_hg_ij[idx_bucket][idx_pair];
-                const Vector3 cij = 2.0 / ( dt * dt ) * hg * rij;
+                const Vector3 cij = -2.0 / ( dt * dt ) * hg * rij;
 
                 // Save the pairwise constraint forces
                 pairwise_constraint_forces[idx_bucket][idx_pair] = cij;
