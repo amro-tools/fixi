@@ -42,55 +42,7 @@ def check(atoms):
     assert hij_max_v < fixi_constraint.tolerance
 
 
-# def test_constraint_forces(water_system):
-#     atoms = water_system
-#     # atoms.positions += 1e-1 * np.random.uniform(size=atoms.positions.shape)
-#     atoms.set_momenta(np.zeros(shape=atoms.positions.shape), apply_constraint=False)
-
-#     original_positions = atoms.get_positions()
-
-#     DT = 5 * fs
-
-#     # also save the constraint forces calculated by fixi
-#     fixi_constraint = atoms._get_constraints()[0]
-
-#     forces = atoms.get_forces()
-
-#     unadjusted_positions = velocity_verlet_step(
-#         atoms, forces, dt=DT, apply_constraint=True
-#     )
-
-#     cell_lengths = atoms.cell.cellpar()[:3]
-#     pbc = atoms.get_pbc()
-#     virial = fixi_constraint.rattle.get_virial(
-#         DT, unadjusted_positions, cell_lengths, pbc
-#     )
-#     constraint_forces = fixi_constraint.rattle.get_constraint_forces(len(atoms))
-#     adjusted_positions = atoms.get_positions()
-
-#     # Now we want to re-run the velcocity verlet algorithm
-#     atoms.set_positions(original_positions, apply_constraint=False)
-#     atoms.set_momenta(np.zeros(shape=atoms.positions.shape), apply_constraint=False)
-
-#     forces_potential = atoms.get_forces()
-#     forces = forces_potential + constraint_forces
-
-#     unadjusted_positions = velocity_verlet_step(
-#         atoms, forces, dt=DT, apply_constraint=False
-#     )
-#     positions_no_constraint = atoms.get_positions()
-
-#     # print(virial)
-#     # print(adjusted_positions)
-#     # print(positions_no_constraint)
-
-#     max_diff = np.max(np.abs(adjusted_positions - positions_no_constraint))
-#     print(f"{max_diff = }")
-
-
-def test_constraint_force_two_particle(lj_dimer):
-    atoms = lj_dimer
-
+def run(atoms):
     atoms_copy = atoms.copy()
     atoms_copy.calc = atoms.calc
 
@@ -98,8 +50,7 @@ def test_constraint_force_two_particle(lj_dimer):
     fixi_constraint = atoms._get_constraints()[0]
 
     # Apply the constraint and calculate the constraint forces using fixi
-    # forces = atoms.get_forces(apply_constraint=False)
-    forces = np.array([[-1.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+    forces = atoms.get_forces(apply_constraint=False)
 
     print("\n")
     print("=" * 40)
@@ -135,8 +86,7 @@ def test_constraint_force_two_particle(lj_dimer):
     print("  After verlet step (without constraints)")
     print("=" * 40)
 
-    # forces_potential = atoms_copy.get_forces(apply_constraint=False)
-    forces_potential = np.array([[-1.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
+    forces_potential = atoms_copy.get_forces(apply_constraint=False)
     forces_total = forces_potential + 1.0 * constraint_forces
 
     unadjusted_positions = velocity_verlet_step(
@@ -157,9 +107,14 @@ def test_constraint_force_two_particle(lj_dimer):
 
     print(f"{max_diff = }")
 
+    assert np.all(
+        np.isclose(adjusted_positions_constrained, positions_constraint_forces)
+    )
 
-if __name__ == "__main__":
-    from conftest import water_system
 
-    # test_constraint_forces(water_system)
-    test_constraint_force_two_particle()
+def test_constraint_forces_water(water_system):
+    run(water_system)
+
+
+def test_constraint_forces_lj(lj_dimer):
+    run(lj_dimer)
