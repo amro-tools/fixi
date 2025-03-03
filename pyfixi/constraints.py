@@ -64,7 +64,7 @@ class FixBondLengths(FixConstraint):
             self.bondlengths = self.compute_initial_bond_lengths(atoms, self.pairs)
             self.construct_fixi_objects(self.pairs, self.bondlengths)
 
-        unadjusted_positions = atoms.positions
+        unadjusted_positions = np.array(newpositions)
 
         cell_lengths = atoms.cell.cellpar()[:3]
         pbc = atoms.get_pbc()

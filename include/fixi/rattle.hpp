@@ -3,6 +3,7 @@
 #include <fixi/buckets.hpp>
 #include <fixi/defines.hpp>
 #include <fixi/utils.hpp>
+#include <iostream>
 namespace Fixi
 {
 
@@ -149,15 +150,15 @@ public:
 
                     const double hij = abs( s2 - dij2 ); // holonomic constraint
 
-                    // if the constraint is violated change adjusted_positions
+                    // if the constraint is violated, change adjusted_positions
                     // this is achieved by solving
                     //   | (adjusted_positions[i] - h g r_ij / mi) - (adjusted_positions[j] + h g r_ij / mj) |^2 = dij^2
                     // for g.
                     // When neglecting g^2 terms in the derivation, we get (also h cancels so we don't need the step size)
                     const double hg = ( s2 - dij2 ) / ( 2.0 * ( s.dot( rij ) ) * ( 1.0 / mi + 1.0 / mj ) );
 
-                    adjusted_positions.row( i ) += -hg * rij / mi;
-                    adjusted_positions.row( j ) -= -hg * rij / mj;
+                    adjusted_positions.row( i ) -= hg * rij / mi;
+                    adjusted_positions.row( j ) += hg * rij / mj;
 
                     // accumulate the total lagrange multiplier
                     pairwise_hg_ij[idx_bucket][idx_pair] += hg;
