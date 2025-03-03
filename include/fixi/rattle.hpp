@@ -109,19 +109,26 @@ public:
     {
         iteration = 0;
         double hij_max{ 0.0 };
+
+        // reset the pairwise_hg_ij to zero
+        for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
+        {
+            const auto & bucket      = buckets[idx_bucket];
+            const int n_pairs_bucket = bucket.size();
+#pragma omp parallel for
+            for( int idx_pair = 0; idx_pair < n_pairs_bucket; idx_pair++ )
+            {
+                pairwise_hg_ij[idx_bucket][idx_pair] = 0;
+            }
+        }
+
         do
         {
             hij_max = 0.0;
             // In order not to create any race conditions we iterate over the buckets serially
             for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
             {
-                const auto & bucket      = buckets[idx_bucket];
-                const int n_pairs_bucket = bucket.size();
-#pragma omp parallel for
-                for( int idx_pair = 0; idx_pair < n_pairs_bucket; idx_pair++ )
-                {
-                    pairwise_hg_ij[idx_bucket][idx_pair] = 0;
-                }
+                const auto & bucket = buckets[idx_bucket];
 
                 auto cb = [&]( int idx_pair ) {
                     const auto & pair = bucket[idx_pair];

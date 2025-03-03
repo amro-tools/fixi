@@ -8,11 +8,16 @@ import numpy as np
 class FixBondLengths(FixConstraint):
     """Constrain bond lengths with RATTLE."""
 
-    def __init__(self, pairs, tolerance=1e-13, bondlengths=None, maxiter=500):
+    def __init__(
+        self, pairs, tolerance=1e-13, bondlengths=None, maxiter=500, atoms=None
+    ):
         self.tolerance = tolerance
         self.maxiter = maxiter
         self.pairs = np.asarray(pairs)
         self.bondlengths = bondlengths
+
+        if bondlengths is None and not atoms is None:
+            self.bondlengths = self.compute_initial_bond_lengths(atoms, self.pairs)
 
         # Try to construct the fixi object
         self.construct_fixi_objects(pairs, bondlengths)

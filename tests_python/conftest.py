@@ -39,3 +39,21 @@ def water_system():
     constrain_water(atoms)
     atoms.calc = construct_calculator(atoms)
     return atoms
+
+
+@pytest.fixture
+def lj_dimer():
+    import numpy as np
+    from ase import Atoms
+    from ase.calculators.lj import LennardJones
+
+    positions = np.array([[-1.0, 0, 0], [1.0, 0, 0]])
+    atoms = Atoms(positions=positions)
+    atoms.set_masses([1.0, 1.0])
+    atoms.set_pbc(False)
+    atoms.calc = LennardJones()
+    atoms.set_constraint(
+        FixBondLengths(pairs=[(0, 1)], bondlengths=[2.0], tolerance=1e-5)
+    )
+
+    return atoms
