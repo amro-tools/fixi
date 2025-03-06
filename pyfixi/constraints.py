@@ -3,6 +3,7 @@ from ase import Atoms
 from ase.geometry import find_mic
 import pyfixi.fixicpp
 import numpy as np
+import numpy.typing as npt
 
 
 class FixBondLengths(FixConstraint):
@@ -59,7 +60,14 @@ class FixBondLengths(FixConstraint):
             self.maxiter, self.tolerance, self.fixi_pairs
         )
 
-    def adjust_positions(self, atoms: Atoms, newpositions):
+    def adjust_positions(self, atoms: Atoms, newpositions:npt.ArrayLike):
+        """Calculates the new adjusted positions using RATTLE. Also calculates the "unscaled virial" 
+        from the constraint forces applied. To get the virial, simply multiply by (timestep)^2. 
+
+        Args:
+            atoms (Atoms): _description_
+            newpositions (_type_): _description_
+        """
         if self.rattle is None:
             self.bondlengths = self.compute_initial_bond_lengths(atoms, self.pairs)
             self.construct_fixi_objects(self.pairs, self.bondlengths)
@@ -73,6 +81,8 @@ class FixBondLengths(FixConstraint):
         self.hij_max = self.rattle.adjust_positions(
             unadjusted_positions, newpositions, masses, cell_lengths, pbc
         )
+
+        # To get the virial, simply multiply by (timestep)^2. This is the unscaled virial 
 
     def adjust_momenta(self, atoms: Atoms, momenta):
         if self.rattle is None:
