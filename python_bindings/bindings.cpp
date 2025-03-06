@@ -56,9 +56,9 @@ PYBIND11_MODULE( fixicpp, m )
         .def( "get_iteration", &Fixi::Rattle::get_iteration )
         .def( "get_pairs", &Fixi::Rattle::get_pairs )
         .def( "get_constraint_forces", &Fixi::Rattle::get_constraint_forces )
-        .def( "get_virial", &Fixi::Rattle::get_virial )
         .def( "adjust_positions", &Fixi::Rattle::adjust_positions )
         .def( "adjust_velocities", &Fixi::Rattle::adjust_velocities )
+        .def( "get_scaled_virial", &Fixi::Rattle::get_scaled_virial )
         .def( py::pickle(
             []( const Fixi::Rattle & p ) { // __getstate__
                 /* Return a tuple that fully encodes the state of the object */

@@ -68,11 +68,8 @@ def run(atoms):
         atoms, forces, dt=DT, apply_constraint=True
     )
 
-    cell_lengths = atoms.cell.cellpar()[:3]
-    pbc = atoms.get_pbc()
-    virial = fixi_constraint.rattle.get_virial(
-        DT, unadjusted_positions, cell_lengths, pbc
-    )
+    scaled_virial = fixi_constraint.rattle.get_scaled_virial()
+    virial = fixi_constraint.get_virial(DT)
 
     constraint_forces = fixi_constraint.rattle.get_constraint_forces(len(atoms))
     adjusted_positions_constrained = atoms.get_positions()
@@ -80,6 +77,7 @@ def run(atoms):
     print(f"{unadjusted_positions=}")
     print(f"{constraint_forces=}")
     print(f"{adjusted_positions_constrained=}")
+    print(f"{scaled_virial=}")
     print(f"{virial=}")
 
     print("=" * 40)

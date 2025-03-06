@@ -15,7 +15,46 @@ class Rattle
     std::vector<std::vector<double>> pairwise_hg_ij{};
     std::vector<std::vector<Vector3>> pairwise_constraint_forces{};
 
+    /** The scaled virial. Needs to be multiplied by timestep^2 to get the virial */
+    Matrix3 scaled_virial{};
+
     int iteration{ 0 };
+
+    Matrix3 compute_scaled_virial(
+        const Eigen::Ref<Vectorfield> unadjusted_positions, const Vector3 & cell_lengths,
+        const std::array<bool, 3> & pbc )
+    {
+        Matrix3 stress_tensor = Matrix3::Zero();
+
+        // In order not to create any race conditions we iterate over the buckets serially
+        for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
+        {
+            const auto & bucket = buckets[idx_bucket];
+
+            auto cb = [&]( int idx_pair ) {
+                const auto pair = bucket[idx_pair];
+                const int i     = pair.i;
+                const int j     = pair.j;
+
+                // `s` is the current approximation for the vector displacement between atoms i and j
+                const Vector3 rij
+                    = mic( unadjusted_positions.row( i ) - unadjusted_positions.row( j ), cell_lengths, pbc );
+                const double hg   = pairwise_hg_ij[idx_bucket][idx_pair];
+                const Vector3 cij = -2.0 * hg * rij;
+
+                // Save the pairwise constraint forces
+                pairwise_constraint_forces[idx_bucket][idx_pair] = cij;
+
+                const Matrix3 stress_tensor_ij = rij.transpose() * cij;
+                return stress_tensor_ij;
+            };
+
+            auto red = [&]( auto & lhs, const auto & rhs ) { lhs += rhs; };
+
+            stress_tensor += Backend::transform_reduce<Matrix3>( bucket.size(), cb, red, Matrix3::Zero() );
+        }
+        return stress_tensor;
+    }
 
 public:
     int maxiter{};
@@ -50,40 +89,9 @@ public:
         return forces;
     }
 
-    Matrix3 get_virial(
-        double dt, const Eigen::Ref<Vectorfield> unadjusted_positions, const Vector3 & cell_lengths,
-        const std::array<bool, 3> & pbc )
+    Matrix3 get_scaled_virial() const
     {
-        Matrix3 stress_tensor = Matrix3::Zero();
-
-        // In order not to create any race conditions we iterate over the buckets serially
-        for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
-        {
-            const auto & bucket = buckets[idx_bucket];
-
-            auto cb = [&]( int idx_pair ) {
-                const auto pair = bucket[idx_pair];
-                const int i     = pair.i;
-                const int j     = pair.j;
-
-                // `s` is the current approximation for the vector displacement between atoms i and j
-                const Vector3 rij
-                    = mic( unadjusted_positions.row( i ) - unadjusted_positions.row( j ), cell_lengths, pbc );
-                const double hg   = pairwise_hg_ij[idx_bucket][idx_pair];
-                const Vector3 cij = -2.0 / ( dt * dt ) * hg * rij;
-
-                // Save the pairwise constraint forces
-                pairwise_constraint_forces[idx_bucket][idx_pair] = cij;
-
-                const Matrix3 stress_tensor_ij = rij.transpose() * cij;
-                return stress_tensor_ij;
-            };
-
-            auto red = [&]( auto & lhs, const auto & rhs ) { lhs += rhs; };
-
-            stress_tensor += Backend::transform_reduce<Matrix3>( bucket.size(), cb, red, Matrix3::Zero() );
-        }
-        return stress_tensor;
+        return scaled_virial;
     }
 
     int get_iteration() const
@@ -175,6 +183,9 @@ public:
             }
             iteration++;
         } while( ( hij_max > tolerance ) && ( iteration < maxiter ) );
+
+        // Before returning, we also compute the scaled virial (aka the stress tensor)
+        scaled_virial = compute_scaled_virial( unadjusted_positions, cell_lengths, pbc );
 
         return hij_max;
     }

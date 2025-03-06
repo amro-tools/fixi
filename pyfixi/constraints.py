@@ -4,7 +4,7 @@ from ase.geometry import find_mic
 import pyfixi.fixicpp
 import numpy as np
 import numpy.typing as npt
-
+from typing import Optional
 
 class FixBondLengths(FixConstraint):
     """Constrain bond lengths with RATTLE."""
@@ -16,6 +16,7 @@ class FixBondLengths(FixConstraint):
         self.maxiter = maxiter
         self.pairs = np.asarray(pairs)
         self.bondlengths = bondlengths
+        self._scaled_virial : Optional[npt.NDArray] = None
 
         if bondlengths is None and not atoms is None:
             self.bondlengths = self.compute_initial_bond_lengths(atoms, self.pairs)
@@ -82,7 +83,10 @@ class FixBondLengths(FixConstraint):
             unadjusted_positions, newpositions, masses, cell_lengths, pbc
         )
 
-        # To get the virial, simply multiply by (timestep)^2. This is the unscaled virial 
+        self._scaled_virial = self.rattle.get_scaled_virial()
+
+    def get_virial(self, dt):
+        return self._scaled_virial * dt**2
 
     def adjust_momenta(self, atoms: Atoms, momenta):
         if self.rattle is None:
