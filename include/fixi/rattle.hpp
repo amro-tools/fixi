@@ -3,7 +3,7 @@
 #include <fixi/buckets.hpp>
 #include <fixi/defines.hpp>
 #include <fixi/utils.hpp>
-#include <iostream>
+#include <stdexcept>
 namespace Fixi
 {
 
@@ -56,9 +56,35 @@ class Rattle
         return stress_tensor;
     }
 
+    void validate_pairs( const std::vector<FixedBondLengthPair> & pairs )
+    {
+        for( const auto & pair : pairs )
+        {
+            if( pair.i == pair.j )
+            {
+                throw std::runtime_error( "Pairs are not valid. There is at least one pair (i,j) with i==j." );
+            }
+        }
+    }
+
 public:
     int maxiter{};
     double tolerance{};
+
+    Rattle( int maxiter, double tolerance, const std::vector<FixedBondLengthPair> & pairs )
+            : pairs( pairs ), buckets( bucket_sorter( pairs ) ), maxiter( maxiter ), tolerance( tolerance )
+    {
+        validate_pairs( pairs );
+
+        pairwise_hg_ij.resize( buckets.size() );
+        pairwise_constraint_forces.resize( buckets.size() );
+
+        for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
+        {
+            pairwise_hg_ij[idx_bucket].resize( buckets[idx_bucket].size() );
+            pairwise_constraint_forces[idx_bucket].resize( buckets[idx_bucket].size() );
+        }
+    }
 
     const std::vector<FixedBondLengthPair> & get_pairs() const
     {
@@ -97,19 +123,6 @@ public:
     int get_iteration() const
     {
         return iteration;
-    }
-
-    Rattle( int maxiter, double tolerance, const std::vector<FixedBondLengthPair> & pairs )
-            : pairs( pairs ), buckets( bucket_sorter( pairs ) ), maxiter( maxiter ), tolerance( tolerance )
-    {
-        pairwise_hg_ij.resize( buckets.size() );
-        pairwise_constraint_forces.resize( buckets.size() );
-
-        for( int idx_bucket = 0; idx_bucket < buckets.size(); idx_bucket++ )
-        {
-            pairwise_hg_ij[idx_bucket].resize( buckets[idx_bucket].size() );
-            pairwise_constraint_forces[idx_bucket].resize( buckets[idx_bucket].size() );
-        }
     }
 
     double adjust_positions(
