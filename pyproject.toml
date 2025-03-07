@@ -1,6 +1,6 @@
 [project]
 name = "pyfixi"
-version = "0.1.1"
+version = "0.2.0"
 description = "Python bindings for fixi"
 authors = [
     {name = "Amrita Goswami", email = "amrita16thaug646@gmail.com"},
